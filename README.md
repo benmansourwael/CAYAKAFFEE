@@ -55,6 +55,7 @@ Ouvrir : http://127.0.0.1:5000
 | Variable | Valeur |
 |----------|--------|
 | `SECRET_KEY` | Une longue chaîne aléatoire (ex: `caya-kaffee-2024-xK9mP...`) |
+'d43383839513a5849678bee603982ecf'
 
 ### 4. Déployer
 Cliquer **Create Web Service** → attendre 2-3 minutes.
