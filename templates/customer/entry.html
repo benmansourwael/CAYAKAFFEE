@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAYA KAFFEE — Bienvenue</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="entry-page">
+  <div class="entry-card">
+    <div class="entry-logo">
+      <h1>CAYA KAFFEE</h1>
+      <p>Bienvenue chez nous</p>
+    </div>
+
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <span class="table-badge">🪑 Table {{ table.number }}{% if table.label %} — {{ table.label }}{% endif %}</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('save_profile', table_number=table.number) }}">
+
+      {% if last_order %}
+      <!-- Rating section for last order -->
+      <div style="background:var(--cream);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+        <h3 style="font-size:1.1rem;color:var(--brown);margin-bottom:.5rem">Votre dernière commande</h3>
+        <p style="font-size:.85rem;color:var(--text-light);margin-bottom:.75rem">Comment s'est-elle passée ?</p>
+        <input type="hidden" name="last_order_id" value="{{ last_order.id }}">
+        <div class="stars-input">
+          {% for i in range(5, 0, -1) %}
+          <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}"
+                 {% if last_order.rating == i %}checked{% endif %}>
+          <label for="star{{ i }}">★</label>
+          {% endfor %}
+        </div>
+        <textarea name="comment" class="form-control" style="margin-top:.75rem"
+                  placeholder="Un commentaire ? (optionnel)" rows="2">{{ last_order.comment or '' }}</textarea>
+      </div>
+      {% endif %}
+
+      <h3 style="font-size:1.2rem;color:var(--brown);margin-bottom:1.25rem">
+        {% if customer %}Vos informations{% else %}Présentez-vous{% endif %}
+      </h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div class="form-group" style="margin:0">
+          <label>Prénom</label>
+          <input type="text" name="first_name" class="form-control"
+                 value="{{ customer.first_name if customer else '' }}" required>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Nom</label>
+          <input type="text" name="last_name" class="form-control"
+                 value="{{ customer.last_name if customer else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:1rem">
+        <label>Téléphone</label>
+        <input type="tel" name="phone" class="form-control"
+               value="{{ customer.phone if customer else '' }}" placeholder="+216 XX XXX XXX">
+      </div>
+
+      <div class="form-group">
+        <label>Genre</label>
+        <select name="gender" class="form-control">
+          <option value="">Préférez ne pas préciser</option>
+          <option value="homme" {% if customer and customer.gender == 'homme' %}selected{% endif %}>Homme</option>
+          <option value="femme" {% if customer and customer.gender == 'femme' %}selected{% endif %}>Femme</option>
+          <option value="autre" {% if customer and customer.gender == 'autre' %}selected{% endif %}>Autre</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.9rem;font-size:1rem;margin-top:.5rem">
+        Voir le menu →
+      </button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAYA KAFFEE — Menu</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="menu-header">
+  <h1>CAYA KAFFEE</h1>
+  <div class="table-info">
+    🪑 Table {{ table.number }}{% if table.label %} — {{ table.label }}{% endif %}
+    {% if customer %} &nbsp;·&nbsp; Bonjour {{ customer.first_name }} !{% endif %}
+  </div>
+</header>
+
+<main class="menu-body">
+  <!-- Category tabs -->
+  {% if categories %}
+  <div class="cat-tabs">
+    {% for cat in categories %}
+    {% if cat.products | selectattr('available') | list %}
+    <button class="cat-tab" onclick="scrollToCategory('cat-{{ cat.id }}')">
+      {{ cat.icon }} {{ cat.name }}
+    </button>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Products -->
+  {% for cat in categories %}
+  {% set avail = cat.products | selectattr('available') | list %}
+  {% if avail %}
+  <section class="category-section" id="cat-{{ cat.id }}">
+    <h2 class="category-title">
+      <span>{{ cat.icon }}</span> {{ cat.name }}
+    </h2>
+    <div class="products-grid">
+      {% for product in avail %}
+      <div class="product-card" id="prod-{{ product.id }}" onclick="handleProductClick({{ product.id }}, '{{ product.name|e }}', {{ product.price }})">
+        {% if product.image %}
+        <img src="{{ url_for('static', filename='uploads/' + product.image) }}"
+             alt="{{ product.name }}" class="product-img">
+        {% else %}
+        <div class="product-img-placeholder">{{ cat.icon }}</div>
+        {% endif %}
+        <div class="product-info">
+          <div class="product-name">{{ product.name }}</div>
+          {% if product.description %}
+          <div class="product-desc">{{ product.description }}</div>
+          {% endif %}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;flex-shrink:0">
+          <div class="product-price">{{ "%.2f"|format(product.price) }} DT</div>
+          <div class="qty-controls" id="qty-{{ product.id }}" style="display:none" onclick="event.stopPropagation()">
+            <button class="qty-btn" onclick="changeQty({{ product.id }}, -1)">−</button>
+            <span class="qty-display" id="qty-display-{{ product.id }}">1</span>
+            <button class="qty-btn" onclick="changeQty({{ product.id }}, 1)">+</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+  {% endfor %}
+</main>
+
+<!-- Cart button -->
+<button class="cart-bar hidden" id="cartBar" onclick="openCart()">
+  <span class="cart-count" id="cartCount">0</span>
+  <span>Voir ma commande</span>
+  <span id="cartTotal" style="margin-left:auto;font-weight:700">0.00 DT</span>
+</button>
+
+<!-- Cart overlay -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+
+<!-- Cart drawer -->
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-handle"></div>
+  <h2 style="font-size:1.6rem;color:var(--brown);margin-bottom:1rem">Ma commande</h2>
+
+  <div id="cartItems"></div>
+
+  <div class="cart-total">
+    <span>Total</span>
+    <span id="cartTotalDrawer">0.00 DT</span>
+  </div>
+
+  <textarea class="note-field" id="orderNote" rows="2"
+            placeholder="Une note pour la cuisine ? (sans sucre, allergie...)"></textarea>
+
+  <button class="btn btn-primary" style="width:100%;justify-content:center;padding:.9rem;font-size:1rem"
+          onclick="confirmOrder()">
+    Confirmer ma commande
+  </button>
+  <button class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:.5rem"
+          onclick="closeCart()">Continuer à choisir</button>
+</div>
+
+<!-- Confirmation screen (hidden) -->
+<div id="confirmScreen" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:300;
+     display:none;align-items:center;justify-content:center;padding:2rem">
+  <div class="order-confirmed">
+    <div class="check">✅</div>
+    <h2>Commande envoyée !</h2>
+    <p style="margin-top:.75rem">Votre commande est bien reçue.<br>Notre équipe s'en occupe dès maintenant.</p>
+    <button class="btn btn-primary" style="margin-top:2rem"
+            onclick="document.getElementById('confirmScreen').style.display='none'">
+      Voir le menu
+    </button>
+  </div>
+</div>
+
+<script>
+const TABLE_NUMBER = {{ table.number }};
+let cart = {}; // product_id -> {name, price, qty}
+
+function handleProductClick(id, name, price) {
+  if (cart[id]) {
+    changeQty(id, 1);
+  } else {
+    cart[id] = {name, price, qty: 1};
+    document.getElementById(`qty-${id}`).style.display = 'flex';
+    document.getElementById(`prod-${id}`).classList.add('in-cart');
+    updateUI();
+  }
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id].qty += delta;
+  if (cart[id].qty <= 0) {
+    delete cart[id];
+    document.getElementById(`qty-${id}`).style.display = 'none';
+    document.getElementById(`prod-${id}`).classList.remove('in-cart');
+  } else {
+    document.getElementById(`qty-display-${id}`).textContent = cart[id].qty;
+  }
+  updateUI();
+}
+
+function updateUI() {
+  const items = Object.entries(cart);
+  const totalQty = items.reduce((s, [,v]) => s + v.qty, 0);
+  const totalPrice = items.reduce((s, [,v]) => s + v.price * v.qty, 0);
+
+  document.getElementById('cartCount').textContent = totalQty;
+  document.getElementById('cartTotal').textContent = totalPrice.toFixed(2) + ' DT';
+  document.getElementById('cartTotalDrawer').textContent = totalPrice.toFixed(2) + ' DT';
+
+  const bar = document.getElementById('cartBar');
+  if (totalQty > 0) bar.classList.remove('hidden');
+  else bar.classList.add('hidden');
+
+  // Update cart items list
+  const container = document.getElementById('cartItems');
+  container.innerHTML = '';
+  for (const [id, item] of items) {
+    const row = document.createElement('div');
+    row.className = 'cart-item';
+    row.innerHTML = `
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="changeQty(${id}, -1)">−</button>
+        <span class="qty-display">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${id}, 1)">+</button>
+      </div>
+      <span class="cart-item-name">${item.name}</span>
+      <span class="cart-item-price">${(item.price * item.qty).toFixed(2)} DT</span>
+    `;
+    container.appendChild(row);
+  }
+}
+
+function openCart() {
+  document.getElementById('cartOverlay').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+}
+
+function closeCart() {
+  document.getElementById('cartOverlay').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+}
+
+async function confirmOrder() {
+  const items = Object.entries(cart).map(([id, item]) => ({
+    product_id: parseInt(id),
+    quantity: item.qty
+  }));
+
+  if (!items.length) return;
+
+  const note = document.getElementById('orderNote').value;
+
+  try {
+    const resp = await fetch(`/table/${TABLE_NUMBER}/order`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({items, note})
+    });
+    const data = await resp.json();
+
+    if (data.success) {
+      closeCart();
+      cart = {};
+      updateUI();
+      // Reset all qty displays
+      document.querySelectorAll('[id^="qty-"]').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('[id^="prod-"]').forEach(el => el.classList.remove('in-cart'));
+      document.getElementById('orderNote').value = '';
+      document.getElementById('confirmScreen').style.display = 'flex';
+    } else {
+      alert('Erreur: ' + data.error);
+    }
+  } catch (e) {
+    alert('Erreur de connexion. Réessayez.');
+  }
+}
+
+function scrollToCategory(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+</script>
+
+</body>
+</html>

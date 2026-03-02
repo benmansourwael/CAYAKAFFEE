@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Commandes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+  <a href="{{ url_for('dashboard') }}" class="admin-nav-brand">☕ CAYA KAFFEE</a>
+  <a href="{{ url_for('dashboard') }}"><span class="nav-label">Accueil</span></a>
+  <a href="{{ url_for('tables') }}"><span class="nav-label">Tables</span></a>
+  <a href="{{ url_for('categories') }}"><span class="nav-label">Catégories</span></a>
+  <a href="{{ url_for('products') }}"><span class="nav-label">Produits</span></a>
+  <a href="{{ url_for('admin_orders') }}" class="active"><span class="nav-label">Commandes</span></a>
+  <a href="{{ url_for('staff_list') }}"><span class="nav-label">Staff</span></a>
+  <a href="{{ url_for('logout') }}" class="logout"><span class="nav-label">Déconnexion</span></a>
+</nav>
+
+<div class="admin-content">
+  <h1 class="page-title">Historique des commandes</h1>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    {% if orders %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Table</th>
+          <th>Client</th>
+          <th>Articles</th>
+          <th>Total</th>
+          <th>Note</th>
+          <th>Note client</th>
+          <th>Statut</th>
+          <th>Heure</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td style="color:var(--text-light);font-size:.82rem">#{{ order.id }}</td>
+          <td style="font-weight:700">{{ order.table.number }}</td>
+          <td style="font-size:.85rem">
+            {% if order.customer %}
+              {{ order.customer.first_name }} {{ order.customer.last_name }}
+              {% if order.customer.phone %}
+              <div style="color:var(--text-light);font-size:.78rem">{{ order.customer.phone }}</div>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--text-light)">Anonyme</span>
+            {% endif %}
+          </td>
+          <td style="font-size:.85rem">
+            {% for item in order.items %}
+            <div>×{{ item.quantity }} {{ item.product.name if item.product else '?' }}</div>
+            {% endfor %}
+          </td>
+          <td style="font-weight:600;color:var(--green-deep);white-space:nowrap">
+            {{ "%.2f"|format(order.items | sum(attribute='unit_price') if order.items else 0) }} DT
+          </td>
+          <td style="font-size:.82rem;font-style:italic;color:var(--text-light)">
+            {{ order.note or '—' }}
+          </td>
+          <td>
+            {% if order.rating %}
+            <div style="color:#f0b429">{{ '★' * order.rating }}{{ '☆' * (5 - order.rating) }}</div>
+            {% if order.comment %}
+            <div style="font-size:.78rem;color:var(--text-light);font-style:italic">{{ order.comment }}</div>
+            {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <span class="badge {% if order.status == 'done' %}badge-green{% else %}badge-yellow{% endif %}">
+              {% if order.status == 'done' %}✓ Terminé{% else %}⏳ En attente{% endif %}
+            </span>
+          </td>
+          <td style="font-size:.82rem;white-space:nowrap">{{ order.created_at.strftime('%d/%m %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:var(--text-light)">Aucune commande.</div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>

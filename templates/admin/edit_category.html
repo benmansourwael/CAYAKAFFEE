@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modifier catégorie</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+  <a href="{{ url_for('dashboard') }}" class="admin-nav-brand">☕ CAYA KAFFEE</a>
+  <a href="{{ url_for('dashboard') }}"><span class="nav-label">Accueil</span></a>
+  <a href="{{ url_for('tables') }}"><span class="nav-label">Tables</span></a>
+  <a href="{{ url_for('categories') }}" class="active"><span class="nav-label">Catégories</span></a>
+  <a href="{{ url_for('products') }}"><span class="nav-label">Produits</span></a>
+  <a href="{{ url_for('admin_orders') }}"><span class="nav-label">Commandes</span></a>
+  <a href="{{ url_for('staff_list') }}"><span class="nav-label">Staff</span></a>
+  <a href="{{ url_for('logout') }}" class="logout"><span class="nav-label">Déconnexion</span></a>
+</nav>
+<div class="admin-content">
+  <h1 class="page-title">Modifier la catégorie</h1>
+  <div class="card" style="max-width:480px">
+    <form method="POST">
+      <div class="form-group">
+        <label>Icône</label>
+        <input type="text" name="icon" class="form-control" value="{{ category.icon }}"
+               maxlength="4" style="font-size:1.4rem;text-align:center">
+      </div>
+      <div class="form-group">
+        <label>Nom *</label>
+        <input type="text" name="name" class="form-control" value="{{ category.name }}" required>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{{ url_for('categories') }}" class="btn btn-secondary">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

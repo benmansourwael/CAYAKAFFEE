@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Tables</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+  <a href="{{ url_for('dashboard') }}" class="admin-nav-brand">☕ CAYA KAFFEE</a>
+  <a href="{{ url_for('dashboard') }}"><span class="nav-label">Accueil</span></a>
+  <a href="{{ url_for('tables') }}" class="active"><span class="nav-label">Tables</span></a>
+  <a href="{{ url_for('categories') }}"><span class="nav-label">Catégories</span></a>
+  <a href="{{ url_for('products') }}"><span class="nav-label">Produits</span></a>
+  <a href="{{ url_for('admin_orders') }}"><span class="nav-label">Commandes</span></a>
+  <a href="{{ url_for('staff_list') }}"><span class="nav-label">Staff</span></a>
+  <a href="{{ url_for('logout') }}" class="logout"><span class="nav-label">Déconnexion</span></a>
+</nav>
+
+<div class="admin-content">
+  <h1 class="page-title">Tables & QR Codes</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Add table form -->
+  <div class="card">
+    <h3 style="margin-bottom:1.25rem;color:var(--brown)">Ajouter une table</h3>
+    <form method="POST" action="{{ url_for('add_table') }}" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0;flex:0 0 120px">
+        <label>Numéro *</label>
+        <input type="number" name="number" class="form-control" min="1" max="999" required placeholder="ex: 5">
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:180px">
+        <label>Libellé (optionnel)</label>
+        <input type="text" name="label" class="form-control" placeholder="ex: Terrasse, Salon VIP...">
+      </div>
+      <button type="submit" class="btn btn-primary">Ajouter + QR Code</button>
+    </form>
+  </div>
+
+  <!-- Tables list -->
+  {% if tables %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem">
+    {% for table in tables %}
+    <div class="card" style="padding:1.25rem">
+      <div style="display:flex;align-items:center;gap:1rem">
+        {% set qr_file = 'qrcodes/table_' ~ table.number ~ '.png' %}
+        <img src="{{ url_for('static', filename=qr_file) }}"
+             alt="QR Table {{ table.number }}" class="qr-preview"
+             onerror="this.style.display='none'">
+        <div style="flex:1">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:var(--brown);font-weight:700">
+            Table {{ table.number }}
+          </div>
+          {% if table.label %}
+          <div style="font-size:.85rem;color:var(--text-light)">{{ table.label }}</div>
+          {% endif %}
+          <div style="font-size:.8rem;color:var(--text-light);margin-top:.25rem">
+            {{ table.orders|length }} commande(s)
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
+        <a href="{{ url_for('static', filename=qr_file) }}" download="QR_Table_{{ table.number }}.png"
+           class="btn btn-secondary btn-sm">⬇ Télécharger QR</a>
+        <form method="POST" action="{{ url_for('regen_qr', id=table.id) }}" style="display:inline">
+          <button type="submit" class="btn btn-secondary btn-sm">🔄 Régénérer</button>
+        </form>
+        <form method="POST" action="{{ url_for('delete_table', id=table.id) }}" style="display:inline"
+              onsubmit="return confirm('Supprimer la table {{ table.number }} ?')">
+          <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+        </form>
+      </div>
+
+      <div style="margin-top:.75rem;padding:.6rem .75rem;background:var(--cream);border-radius:8px;font-size:.78rem;color:var(--text-light);word-break:break-all">
+        {{ request.host_url }}table/{{ table.number }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card" style="text-align:center;color:var(--text-light);padding:2.5rem">
+    Aucune table. Ajoutez-en une ci-dessus.
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

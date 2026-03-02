@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAYA KAFFEE — Connexion</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="login-wrapper">
+  <div class="login-box">
+    <h1>CAYA KAFFEE</h1>
+    <p class="subtitle">Espace de gestion</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" style="text-align:left">
+      <div class="form-group">
+        <label>Nom d'utilisateur</label>
+        <input type="text" name="username" class="form-control" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:.9rem;margin-top:.5rem">
+        Connexion
+      </button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

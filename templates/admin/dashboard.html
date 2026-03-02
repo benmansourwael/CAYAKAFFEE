@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Tableau de bord</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+  <a href="{{ url_for('dashboard') }}" class="admin-nav-brand">☕ CAYA KAFFEE</a>
+  <a href="{{ url_for('dashboard') }}" class="active"><span class="nav-label">Accueil</span></a>
+  <a href="{{ url_for('tables') }}"><span class="nav-label">Tables</span></a>
+  <a href="{{ url_for('categories') }}"><span class="nav-label">Catégories</span></a>
+  <a href="{{ url_for('products') }}"><span class="nav-label">Produits</span></a>
+  <a href="{{ url_for('admin_orders') }}"><span class="nav-label">Commandes</span></a>
+  <a href="{{ url_for('staff_list') }}"><span class="nav-label">Staff</span></a>
+  <a href="{{ url_for('logout') }}" class="logout"><span class="nav-label">Déconnexion</span></a>
+</nav>
+
+<div class="admin-content">
+  <h1 class="page-title">Tableau de bord</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">{{ table_count }}</div>
+      <div class="stat-label">Tables</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ cat_count }}</div>
+      <div class="stat-label">Catégories</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ product_count }}</div>
+      <div class="stat-label">Produits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number" style="color:{% if new_orders > 0 %}#e67e22{% else %}var(--green-deep){% endif %}">{{ new_orders }}</div>
+      <div class="stat-label">Commandes en attente</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ order_count }}</div>
+      <div class="stat-label">Total commandes</div>
+    </div>
+  </div>
+
+  <div class="quick-links">
+    <a href="{{ url_for('tables') }}" class="quick-link">
+      <div class="quick-link-icon">🪑</div>
+      <div class="quick-link-title">Tables & QR Codes</div>
+      <div class="quick-link-sub">Gérer les tables, générer les QR</div>
+    </a>
+    <a href="{{ url_for('categories') }}" class="quick-link">
+      <div class="quick-link-icon">🗂️</div>
+      <div class="quick-link-title">Catégories</div>
+      <div class="quick-link-sub">Café, Crêpes, Boissons...</div>
+    </a>
+    <a href="{{ url_for('add_product') }}" class="quick-link">
+      <div class="quick-link-icon">➕</div>
+      <div class="quick-link-title">Nouveau produit</div>
+      <div class="quick-link-sub">Ajouter au menu</div>
+    </a>
+    <a href="{{ url_for('admin_orders') }}" class="quick-link">
+      <div class="quick-link-icon">📋</div>
+      <div class="quick-link-title">Historique commandes</div>
+      <div class="quick-link-sub">Voir toutes les commandes</div>
+    </a>
+    <a href="{{ url_for('staff_list') }}" class="quick-link">
+      <div class="quick-link-icon">👥</div>
+      <div class="quick-link-title">Comptes Staff</div>
+      <div class="quick-link-sub">Gérer les serveurs</div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

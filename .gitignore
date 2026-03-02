@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+instance/
+*.db
+.env
+static/uploads/*
+!static/uploads/.gitkeep
+static/qrcodes/*
+!static/qrcodes/.gitkeep
+venv/
+.venv/

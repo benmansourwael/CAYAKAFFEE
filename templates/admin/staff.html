@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Staff</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+  <a href="{{ url_for('dashboard') }}" class="admin-nav-brand">☕ CAYA KAFFEE</a>
+  <a href="{{ url_for('dashboard') }}"><span class="nav-label">Accueil</span></a>
+  <a href="{{ url_for('tables') }}"><span class="nav-label">Tables</span></a>
+  <a href="{{ url_for('categories') }}"><span class="nav-label">Catégories</span></a>
+  <a href="{{ url_for('products') }}"><span class="nav-label">Produits</span></a>
+  <a href="{{ url_for('admin_orders') }}"><span class="nav-label">Commandes</span></a>
+  <a href="{{ url_for('staff_list') }}" class="active"><span class="nav-label">Staff</span></a>
+  <a href="{{ url_for('logout') }}" class="logout"><span class="nav-label">Déconnexion</span></a>
+</nav>
+
+<div class="admin-content">
+  <h1 class="page-title">Comptes Staff</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="card">
+    <h3 style="margin-bottom:1.25rem;color:var(--brown)">Créer un compte serveur</h3>
+    <form method="POST" action="{{ url_for('add_staff') }}"
+          style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end">
+      <div class="form-group" style="margin:0;flex:1;min-width:160px">
+        <label>Nom d'utilisateur *</label>
+        <input type="text" name="username" class="form-control" required placeholder="ex: serveur1">
+      </div>
+      <div class="form-group" style="margin:0;flex:1;min-width:160px">
+        <label>Mot de passe *</label>
+        <input type="password" name="password" class="form-control" required placeholder="Minimum 6 caractères">
+      </div>
+      <button type="submit" class="btn btn-primary">Créer</button>
+    </form>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    {% if users %}
+    <table class="table">
+      <thead><tr><th>Nom d'utilisateur</th><th>Rôle</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td style="font-weight:500">👤 {{ user.username }}</td>
+          <td><span class="badge badge-yellow">Staff / Serveur</span></td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_staff', id=user.id) }}"
+                  onsubmit="return confirm('Supprimer ce compte ?')">
+              <button class="btn btn-danger btn-sm">Supprimer</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:var(--text-light)">Aucun compte staff.</div>
+    {% endif %}
+  </div>
+
+  <div class="card" style="background:var(--cream);border:1px dashed var(--green-light)">
+    <p style="font-size:.88rem;color:var(--text-light)">
+      💡 Les comptes staff accèdent uniquement à la page <strong>/staff</strong> (commandes en temps réel).<br>
+      Le compte <strong>admin</strong> a accès à tout le panneau d'administration.
+    </p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CAYA KAFFEE — Commandes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="staff-body">
+
+<header class="staff-header">
+  <h1>☕ CAYA KAFFEE — Commandes en cours</h1>
+  <div class="live-dot" title="Connexion en direct"></div>
+  <a href="{{ url_for('logout') }}" style="color:#888;text-decoration:none;font-size:.85rem;margin-left:1rem">Déconnexion</a>
+</header>
+
+<div class="staff-content">
+  <div class="orders-grid" id="ordersGrid">
+    {% if orders %}
+      {% for order in orders %}
+      <div class="order-card" id="order-{{ order.id }}">
+        <div class="order-card-header">
+          <span class="order-table-badge">Table {{ order.table.number }}</span>
+          <span class="order-time">{{ order.created_at.strftime('%H:%M') }}</span>
+        </div>
+        <div class="order-customer">
+          👤 {{ order.customer.first_name ~ ' ' ~ order.customer.last_name if order.customer else 'Client anonyme' }}
+        </div>
+        <div class="order-items">
+          {% for item in order.items %}
+          <div class="order-item-row">
+            <span><span class="order-item-qty">×{{ item.quantity }}</span>{{ item.product.name if item.product else '?' }}</span>
+            <span style="color:#888">{{ "%.2f"|format(item.unit_price * item.quantity) }} DT</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% if order.note %}
+        <div class="order-note">📝 {{ order.note }}</div>
+        {% endif %}
+        <button class="btn-done" onclick="markDone({{ order.id }})">✓ Marquer comme terminé</button>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty-staff" id="emptyMsg">
+      <p>☕</p>
+      <p>Aucune commande en attente</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// SSE — live updates
+const evtSource = new EventSource("{{ url_for('staff_stream') }}");
+
+evtSource.addEventListener('new_order', function(e) {
+  const order = JSON.parse(e.data);
+  addOrderCard(order);
+  // Remove empty message if present
+  const empty = document.getElementById('emptyMsg');
+  if (empty) empty.remove();
+  // Play a subtle notification sound (browser beep via AudioContext)
+  playBeep();
+});
+
+evtSource.addEventListener('order_done', function(e) {
+  const data = JSON.parse(e.data);
+  const card = document.getElementById(`order-${data.id}`);
+  if (card) {
+    card.classList.add('done');
+    setTimeout(() => card.remove(), 1500);
+  }
+});
+
+evtSource.onerror = function() {
+  console.log('SSE reconnecting...');
+};
+
+function addOrderCard(order) {
+  const grid = document.getElementById('ordersGrid');
+  const card = document.createElement('div');
+  card.className = 'order-card';
+  card.id = `order-${order.id}`;
+
+  const itemsHtml = order.items.map(i =>
+    `<div class="order-item-row">
+      <span><span class="order-item-qty">×${i.qty}</span>${i.name}</span>
+      <span style="color:#888">${(i.price * i.qty).toFixed(2)} DT</span>
+    </div>`
+  ).join('');
+
+  const noteHtml = order.note
+    ? `<div class="order-note">📝 ${order.note}</div>` : '';
+
+  card.innerHTML = `
+    <div class="order-card-header">
+      <span class="order-table-badge">Table ${order.table}</span>
+      <span class="order-time">${order.created_at}</span>
+    </div>
+    <div class="order-customer">👤 ${order.customer || 'Client anonyme'}</div>
+    <div class="order-items">${itemsHtml}</div>
+    ${noteHtml}
+    <button class="btn-done" onclick="markDone(${order.id})">✓ Marquer comme terminé</button>
+  `;
+
+  grid.prepend(card);
+}
+
+async function markDone(orderId) {
+  const card = document.getElementById(`order-${orderId}`);
+  if (card) {
+    card.style.opacity = '.5';
+    card.style.pointerEvents = 'none';
+  }
+  try {
+    await fetch(`/staff/order/${orderId}/done`, {method: 'POST'});
+    if (card) {
+      card.classList.add('done');
+      setTimeout(() => {
+        card.remove();
+        checkEmpty();
+      }, 800);
+    }
+  } catch(e) {
+    if (card) { card.style.opacity = '1'; card.style.pointerEvents = ''; }
+    alert('Erreur. Réessayez.');
+  }
+}
+
+function checkEmpty() {
+  const grid = document.getElementById('ordersGrid');
+  if (!grid.querySelector('.order-card')) {
+    grid.innerHTML = `<div class="empty-staff" id="emptyMsg">
+      <p>☕</p><p>Aucune commande en attente</p>
+    </div>`;
+  }
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(); osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+</script>
+
+</body>
+</html>

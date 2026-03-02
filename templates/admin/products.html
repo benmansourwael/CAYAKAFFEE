@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Produits</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="admin-body">
+<nav class="admin-nav">
+  <a href="{{ url_for('dashboard') }}" class="admin-nav-brand">☕ CAYA KAFFEE</a>
+  <a href="{{ url_for('dashboard') }}"><span class="nav-label">Accueil</span></a>
+  <a href="{{ url_for('tables') }}"><span class="nav-label">Tables</span></a>
+  <a href="{{ url_for('categories') }}"><span class="nav-label">Catégories</span></a>
+  <a href="{{ url_for('products') }}" class="active"><span class="nav-label">Produits</span></a>
+  <a href="{{ url_for('admin_orders') }}"><span class="nav-label">Commandes</span></a>
+  <a href="{{ url_for('staff_list') }}"><span class="nav-label">Staff</span></a>
+  <a href="{{ url_for('logout') }}" class="logout"><span class="nav-label">Déconnexion</span></a>
+</nav>
+
+<div class="admin-content">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem">
+    <h1 class="page-title" style="margin:0">Produits</h1>
+    <a href="{{ url_for('add_product') }}" class="btn btn-primary">+ Nouveau produit</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if categories %}
+  <div style="margin-bottom:1.25rem;display:flex;gap:.5rem;flex-wrap:wrap">
+    <a href="{{ url_for('products') }}"
+       class="btn btn-sm {% if not selected_cat %}btn-primary{% else %}btn-secondary{% endif %}">Tous</a>
+    {% for cat in categories %}
+    <a href="{{ url_for('products', category_id=cat.id) }}"
+       class="btn btn-sm {% if selected_cat == cat.id %}btn-primary{% else %}btn-secondary{% endif %}">
+      {{ cat.icon }} {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card" style="padding:0;overflow:hidden">
+    {% if products %}
+    <table class="table">
+      <thead><tr><th>Image</th><th>Nom</th><th>Catégorie</th><th>Prix</th><th>Dispo</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for prod in products %}
+        <tr>
+          <td>
+            {% if prod.image %}
+            <img src="{{ url_for('static', filename='uploads/' + prod.image) }}" class="thumb" alt="">
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <div style="font-weight:500">{{ prod.name }}</div>
+            {% if prod.description %}
+            <div style="font-size:.78rem;color:var(--text-light)">{{ prod.description[:55] }}{% if prod.description|length > 55 %}...{% endif %}</div>
+            {% endif %}
+          </td>
+          <td>{{ prod.category.icon }} {{ prod.category.name }}</td>
+          <td style="font-weight:600;color:var(--green-deep)">{{ "%.2f"|format(prod.price) }} DT</td>
+          <td>
+            <form method="POST" action="{{ url_for('toggle_product', id=prod.id) }}" style="display:inline">
+              <button class="badge {% if prod.available %}badge-green{% else %}badge-red{% endif %}"
+                      style="border:none;cursor:pointer">
+                {% if prod.available %}✓ Oui{% else %}✗ Non{% endif %}
+              </button>
+            </form>
+          </td>
+          <td>
+            <div class="actions">
+              <a href="{{ url_for('edit_product', id=prod.id) }}" class="btn btn-secondary btn-sm">Modifier</a>
+              <form method="POST" action="{{ url_for('delete_product', id=prod.id) }}"
+                    onsubmit="return confirm('Supprimer ce produit ?')">
+                <button class="btn btn-danger btn-sm">Supprimer</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2rem;text-align:center;color:var(--text-light)">
+      Aucun produit. <a href="{{ url_for('add_product') }}" style="color:var(--green-deep)">Ajoutez-en un</a>.
+    </div>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
