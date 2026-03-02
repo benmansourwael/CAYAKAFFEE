@@ -596,20 +596,45 @@ def delete_staff(id):
 
 # ── Init ───────────────────────────────────────────────────────────────────────
 
-def init_db():
+# def init_db():
+#     with app.app_context():
+#         db.create_all()
+#         if not User.query.first():
+#             db.session.add(User(
+#                 username      = 'admin',
+#                 password_hash = generate_password_hash('admin123'),
+#                 role          = 'admin'
+#             ))
+#             db.session.commit()
+#             print("✅ Admin créé: admin / admin123")
+
+# if __name__ == '__main__':
+#     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+#     os.makedirs(app.config['QR_FOLDER'], exist_ok=True)
+#     init_db()
+#     app.run(debug=True, threaded=True)
+
+
+# ── Init (Render + Gunicorn safe) ─────────────────────────────────────────────
+
+def initialize_database():
     with app.app_context():
         db.create_all()
-        if not User.query.first():
+
+        # Créer admin seulement s'il n'existe pas
+        admin = User.query.filter_by(username='admin').first()
+        if not admin:
             db.session.add(User(
-                username      = 'admin',
-                password_hash = generate_password_hash('admin123'),
-                role          = 'admin'
+                username='admin',
+                password_hash=generate_password_hash('admin123'),
+                role='admin'
             ))
             db.session.commit()
             print("✅ Admin créé: admin / admin123")
 
-if __name__ == '__main__':
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(app.config['QR_FOLDER'], exist_ok=True)
-    init_db()
-    app.run(debug=True, threaded=True)
+# Crée les dossiers nécessaires (important sur Render)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['QR_FOLDER'], exist_ok=True)
+
+# Initialise la base au démarrage (fonctionne avec Gunicorn)
+initialize_database()
